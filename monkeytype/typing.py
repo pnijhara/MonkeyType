@@ -53,7 +53,8 @@ DUMMY_OPTIONAL_TYPED_DICT_NAME = 'OPTIONAL_TYPED_DICT_NAME'
 def make_typed_dict(*, required_fields=None, optional_fields=None) -> type:
     required_fields = required_fields or {}
     optional_fields = optional_fields or {}
-    assert required_fields.keys().isdisjoint(optional_fields.keys())
+    if not required_fields.keys().isdisjoint(optional_fields.keys()):
+        raise AssertionError
     return TypedDict(DUMMY_TYPED_DICT_NAME, {
         "required_fields": TypedDict(DUMMY_REQUIRED_TYPED_DICT_NAME, required_fields),
         "optional_fields": TypedDict(DUMMY_OPTIONAL_TYPED_DICT_NAME, optional_fields)
@@ -247,7 +248,8 @@ class GenericTypeRewriter(Generic[T], ABC):
         return self._rewrite_container(Generator, generator)
 
     def rewrite_anonymous_TypedDict(self, typed_dict):
-        assert is_anonymous_typed_dict(typed_dict)
+        if not is_anonymous_typed_dict(typed_dict):
+            raise AssertionError
         required_fields, optional_fields = field_annotations(typed_dict)
         return self.make_anonymous_typed_dict(required_fields={name: self.rewrite(typ)
                                                                for name, typ in required_fields.items()},
@@ -395,7 +397,8 @@ class RewriteAnonymousTypedDictToDict(TypeRewriter):
     """TypedDict('Foo', {"k": v1, ...}) -> Dict[str, Union[v1, ...]]."""
 
     def rewrite_anonymous_TypedDict(self, typed_dict):
-        assert is_anonymous_typed_dict(typed_dict)
+        if not is_anonymous_typed_dict(typed_dict):
+            raise AssertionError
         required_fields, optional_fields = field_annotations(typed_dict)
         all_value_types = [*required_fields.values(), *optional_fields.values()]
         if not all_value_types:
